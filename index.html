@@ -2,9 +2,14 @@
 <html lang="ku" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Maten Store - نرخی کاڵاکان</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mal Centre - نرخی کاڵاکان</title>
     <meta http-equiv="Content-Language" content="ku">
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a365d">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <style>
@@ -35,13 +40,26 @@
             --dark-gray: #718096;
             --section-bg: #ffffff;
             --section-border: #cbd5e0;
+            --warning-color: #d69e2e;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'NRT', sans-serif; }
+        
+        /* ڕێگریکردن لە delay ی دەستلێدان لە مۆبایل */
+        button, input, select { touch-action: manipulation; }
+        
         body { background-color: var(--light-gray); color: var(--text-color); direction: rtl; transition: background-color 0.3s; }
         .app-container { max-width: 100%; margin: 0 auto; background-color: white; min-height: 100vh; position: relative; }
         .app-header { background-color: white; color: var(--primary-color); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); border-bottom: 2px solid var(--accent-color); }
         .logo { display: flex; align-items: center; gap: 10px; }
-        .logo-bottom { font-size: 22px; font-weight: bold; color: var(--primary-color); }
+        .logo-bottom { 
+            font-size: 25px; 
+            font-weight: 900; 
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
         .user-actions { display: flex; align-items: center; gap: 15px; }
         .user-actions button { color: var(--primary-color); background: none; border: none; font-size: 18px; cursor: pointer; }
         .main-content { padding-bottom: 90px; }
@@ -50,8 +68,16 @@
         
         .categories { display: flex; overflow-x: auto; padding: 8px 0; gap: 8px; scrollbar-width: none; }
         .categories::-webkit-scrollbar { display: none; }
-        .category-btn { background-color: var(--light-gray); border: none; padding: 6px 12px; border-radius: 18px; white-space: nowrap; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px; border: 1px solid var(--section-border); }
+        .category-btn { background-color: var(--light-gray); border: none; padding: 6px 12px; border-radius: 18px; white-space: nowrap; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px; border: 1px solid var(--section-border); transition: all 0.2s; }
         .category-btn.active { background-color: var(--primary-color); color: white; border-color: var(--primary-color); font-weight: bold; }
+        
+        .category-btn.special-filter { background-color: #fffaeb; color: var(--warning-color); border-color: #f6e05e; }
+        .category-btn.special-filter.active { background-color: var(--warning-color); color: white; border-color: var(--warning-color); }
+        
+        /* دیزاینی تایبەت بۆ دوگمەی بێ بارکۆد */
+        .category-btn.no-barcode-filter { background-color: #ffe4e6; color: #e11d48; border-color: #fda4af; }
+        .category-btn.no-barcode-filter.active { background-color: #e11d48; color: white; border-color: #e11d48; }
+        
         .delete-cat { margin-right: 8px; color: var(--danger-color); cursor: pointer; padding: 2px; }
         
         .search-container { margin: 12px; display: flex; gap: 8px; }
@@ -60,18 +86,38 @@
         .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--dark-gray); }
         .scan-btn { background-color: var(--primary-color); color: white; border: none; border-radius: 6px; padding: 0 15px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
         
-        .products-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-        .product-card { background-color: white; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--section-border); transition: transform 0.2s, box-shadow 0.2s; }
+        .products-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .product-card { background-color: white; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--section-border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
-        .product-image-container { width: 100%; aspect-ratio: 1/1; position: relative; background-color: var(--light-gray); }
-        .product-image { width: 100%; height: 100%; object-fit: contain; padding: 10px; }
-        .product-info { padding: 8px; text-align: center; }
-        .product-name { font-weight: bold; font-size: 14px; }
-        .product-code-display { font-size: 11px; color: var(--dark-gray); margin-top: 4px; background: var(--light-gray); padding: 2px 5px; border-radius: 4px; display: inline-block; }
-        .product-price { color: var(--accent-light); font-weight: 700; font-size: 15px; margin-top: 4px; }
-        .product-actions { position: absolute; top: 5px; left: 5px; display: none; gap: 5px; flex-direction: column; }
+        
+        .product-image-container { 
+            width: 100%; 
+            aspect-ratio: 3/4; 
+            position: relative; 
+            background-color: var(--light-gray);
+            overflow: hidden; 
+            border-bottom: 1px solid var(--section-border);
+        }
+        .product-image { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+        
+        .product-info { padding: 12px 8px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .product-name { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+        .product-code-display { font-size: 11px; color: var(--dark-gray); background: var(--light-gray); padding: 2px 5px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+        .product-price { color: var(--accent-light); font-weight: 700; font-size: 15px; }
+        
+        .profit-section { margin-top: 10px; background-color: #f0fff4; border: 1px dashed var(--accent-light); border-radius: 6px; padding: 8px; text-align: right; font-size: 12px; display: none; }
+        .profit-section.show { display: block; }
+        .profit-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .profit-amount { font-weight: bold; color: var(--accent-color); }
+        .loss-amount { font-weight: bold; color: var(--danger-color); }
+        
+        .product-actions { position: absolute; top: 5px; left: 5px; display: none; gap: 5px; flex-direction: column; z-index: 10; }
         .product-card:hover .product-actions { display: flex; }
-        .edit-btn, .delete-btn { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 13px; color: white; cursor: pointer; }
+        .edit-btn, .delete-btn { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 13px; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .edit-btn { background-color: var(--accent-color); }
         .delete-btn { background-color: var(--danger-color); }
         
@@ -79,7 +125,7 @@
         .modal-content { background-color: white; margin: 30px auto; padding: 20px; border-radius: 8px; width: 90%; max-width: 450px; position: relative; }
         .close { position: absolute; top: 12px; left: 12px; font-size: 22px; cursor: pointer; z-index: 10; }
         .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; }
+        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--section-border); border-radius: 6px; }
         button[type="submit"] { background-color: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
         .notification { position: fixed; top: 15px; right: 15px; padding: 12px 16px; border-radius: 6px; color: white; z-index: 300; opacity: 0; transform: translateX(100%); transition: all 0.3s; }
@@ -87,21 +133,38 @@
         .notification.success { background-color: var(--accent-color); }
         .notification.error { background-color: var(--danger-color); }
         
-        /* دوگمەکانی ئەدمین */
         .admin-controls { display: none; position: fixed; bottom: 20px; right: 20px; flex-direction: column; gap: 15px; z-index: 80; }
         .action-fab { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .add-cat-btn { background-color: var(--primary-color); }
         .add-prod-btn { background-color: var(--accent-color); }
         
-        #reader { width: 100%; min-height: 250px; margin-top: 20px; }
+        .stats-btn { background-color: #805ad5; }
+        .stat-box { background: white; padding: 15px; border-radius: 8px; border: 1px solid var(--section-border); text-align: center; }
+        .stat-title { color: var(--text-light); font-size: 14px; margin-bottom: 5px; }
+        .stat-value { font-size: 20px; font-weight: bold; }
+        .val-purchase { color: var(--primary-light); }
+        .val-selling { color: var(--text-color); }
+        .val-profit { color: var(--accent-light); }
+        .val-percentage { font-size: 24px; color: #d69e2e; }
+        .stat-highlight { background-color: #fffaeb; border-color: #f6e05e; }
+        .stat-success { background-color: #f0fff4; border-color: var(--accent-light); }
+        
+        #reader { border: 2px dashed var(--accent-color); border-radius: 12px; padding: 15px; background-color: #f8fafc; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); margin-top: 20px; width: 100%; min-height: 250px; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        #reader video { width: 100% !important; border-radius: 8px !important; object-fit: cover; }
+        
+        .skeleton { background: linear-gradient(90deg, #e2e8f0 25%, #edf2f7 50%, #e2e8f0 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        
+        .spinner { width: 30px; height: 30px; border: 3px solid var(--light-gray); border-top: 3px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="app-container">
         <header class="app-header">
             <div class="logo">
-                <i class="fas fa-store" style="color: var(--accent-color); font-size: 24px;"></i>
-                <span class="logo-bottom">فرۆشگای MATEN</span>
+                <i class="fas fa-shopping-basket" style="color: var(--accent-color); font-size: 26px; filter: drop-shadow(0 2px 4px rgba(47, 133, 90, 0.3));"></i>
+                <span class="logo-bottom">Mal Centre</span>
             </div>
             <div class="user-actions">
                 <button id="adminLoginBtn" title="چوونەژوورەوەی بەڕێوەبەر"><i class="fas fa-user-shield"></i></button>
@@ -109,7 +172,6 @@
             </div>
         </header>
 
-        <!-- مۆدێلی سکانەری بارکۆد -->
         <div id="scannerModal" class="modal">
             <div class="modal-content">
                 <span class="close" id="closeScanner">&times;</span>
@@ -119,15 +181,14 @@
             </div>
         </div>
 
-        <!-- مۆدێلی چوونەژوورەوە -->
         <div id="loginModal" class="modal">
             <div class="modal-content">
                 <span class="close" id="closeLogin">&times;</span>
                 <h2 style="text-align: center; margin-bottom: 18px;">چوونەژوورەوەی بەڕێوەبەر</h2>
                 <form id="loginForm">
                     <div class="form-group">
-                        <label for="username">ناوی بەکارهێنەر:</label>
-                        <input type="text" id="username" required>
+                        <label for="email">ئیمەیل:</label>
+                        <input type="email" id="email" required>
                     </div>
                     <div class="form-group">
                         <label for="password">وشەی نهێنی:</label>
@@ -135,6 +196,17 @@
                     </div>
                     <button type="submit">چوونەژوورەوە</button>
                 </form>
+            </div>
+        </div>
+        
+        <div id="statsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" id="closeStats">&times;</span>
+                <h2 style="text-align: center; margin-bottom: 18px; color: var(--primary-color);">
+                    <i class="fas fa-chart-line"></i> پوختەی قازانج
+                </h2>
+                <div id="statsContent" style="display: flex; flex-direction: column; gap: 10px;">
+                </div>
             </div>
         </div>
 
@@ -149,17 +221,15 @@
             <div class="section">
                 <h3 class="section-title"><i class="fas fa-list"></i> جۆرەکان</h3>
                 <div class="categories" id="categoriesContainer" style="padding-bottom: 10px;">
-                    <!-- جۆرەکان لێرە بە داینامیکی دروست دەبن -->
-                    <button class="category-btn active" data-category="all"><i class="fas fa-th"></i> هەمی</button>
                 </div>
             </div>
             <div class="section">
                 <h3 class="section-title"><i class="fas fa-box-open"></i> کاڵاکان</h3>
-                <div class="products-container" id="productsContainer"></div>
+                <div class="products-container" id="productsContainer">
+                </div>
             </div>
         </main>
         
-        <!-- دوگمەکانی تایبەت بە ئەدمین -->
         <div class="admin-controls" id="adminControls">
             <div class="action-fab add-cat-btn" id="addCategoryBtn" title="زیادکردنی جۆر">
                 <i class="fas fa-folder-plus"></i>
@@ -167,9 +237,11 @@
             <div class="action-fab add-prod-btn" id="addProductBtn" title="زیادکردنی کاڵا">
                 <i class="fas fa-plus"></i>
             </div>
+            <div class="action-fab stats-btn" id="statsBtn" title="ئامار و قازانج">
+                <i class="fas fa-chart-pie"></i>
+            </div>
         </div>
 
-        <!-- مۆدێلی زیادکردنی جۆر (Category) -->
         <div id="categoryFormModal" class="modal">
             <div class="modal-content">
                 <span class="close" id="closeCategoryForm">&times;</span>
@@ -184,7 +256,6 @@
             </div>
         </div>
 
-        <!-- مۆدێلی زیادکردنی کاڵا (Product) -->
         <div id="productFormModal" class="modal">
             <div class="modal-content">
                 <span class="close" id="closeForm">&times;</span>
@@ -192,24 +263,28 @@
                 <form id="productForm">
                     <div class="form-group">
                         <label for="productCode">کۆدی کاڵا (بارکۆد):</label>
-                        <input type="text" id="productCode" required placeholder="بۆ نموونە: 123456789">
+                        <input type="text" id="productCode" placeholder="ئەگەر بارکۆدی نییە با بەتاڵی بمێنێتەوە...">
                     </div>
                     <div class="form-group"><label for="productName">ناوی کاڵا:</label><input type="text" id="productName" required></div>
                     
                     <div class="form-group">
-                        <label for="productPrice">نرخ ($):</label>
-                        <input type="number" id="productPrice" required min="0" step="0.01">
+                        <label for="productPurchasePrice" style="color: var(--primary-light);">نرخی کڕین - جوملە (دینار):</label>
+                        <input type="number" id="productPurchasePrice" required min="0" placeholder="بۆ نموونە: 4000">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="productPrice" style="color: var(--accent-color);">نرخی فرۆشتن (دینار):</label>
+                        <input type="number" id="productPrice" required min="0" placeholder="بۆ نموونە: 5000">
+                        <div id="priceChangeIndicator" style="margin-top: 8px; font-size: 13px; font-weight: bold;"></div>
                     </div>
                     
                     <div class="form-group">
                         <label for="productCategory">جۆر:</label>
                         <select id="productCategory" required>
                             <option value="" disabled selected>-- جۆرێک هەڵبژێرە --</option>
-                            <!-- هەڵبژاردنەکان لە فایەربەیسەوە دێن -->
                         </select>
                     </div>
                     
-                    <!-- گۆڕانکاری لێرە کرا: خانەیەک بۆ لینکی وێنە -->
                     <div class="form-group">
                         <label for="productImage">لینکی وێنەی کاڵا:</label>
                         <input type="url" id="productImage" required placeholder="لینکی وێنەکە لێرە دابنێ (http://...)">
@@ -221,35 +296,50 @@
         </div>
     </div>
     
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker Registered!'))
+                    .catch(err => console.error('Service Worker Error', err));
+            });
+        }
+    </script>
+
     <script type="module"> 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
-        // زانیارییە نوێیەکانی فایەربەیسەکەی تۆ
         const firebaseConfig = {
-            apiKey: "AIzaSyDhM1385HOvqcJhyVilnRxkoChy-43iRQc",
-            authDomain: "maten-a2460.firebaseapp.com",
-            projectId: "maten-a2460",
-            storageBucket: "maten-a2460.firebasestorage.app",
-            messagingSenderId: "851227707218",
-            appId: "1:851227707218:web:cb27b97eb1bc91b4429c8b",
-            measurementId: "G-5FVWYB7EN8"
+            apiKey: "AIzaSyCpxraFiaRkC1ZD1gs3_PjiM9TeJBz0pSE",
+            authDomain: "maten-store-b9a7e.firebaseapp.com",
+            projectId: "maten-store-b9a7e",
+            storageBucket: "maten-store-b9a7e.firebasestorage.app",
+            messagingSenderId: "702767845858",
+            appId: "1:702767845858:web:6ab5220093c2427d6c69bb",
+            measurementId: "G-9NX20DGLDS"
         };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
         
         const productsCollection = collection(db, "products");
         const categoriesCollection = collection(db, "categories");
 
-        const ADMIN_USER = { username: "maten", password: "maten411" };
         let products = [];
         let categories = [];
         let isAdmin = false;
         let editingProductId = null;
+        let originalPrice = 0; 
         let currentCategory = 'all';
         let currentSearch = '';
-        let html5QrcodeScanner = null;
+        
+        let html5QrCode = null;
+        let isScanning = false;
+        
+        let renderLimit = 15; 
 
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
@@ -266,12 +356,18 @@
         const searchInput = document.getElementById('searchInput');
         const scanBtn = document.getElementById('scanBtn');
         
+        const statsBtn = document.getElementById('statsBtn');
+        const statsModal = document.getElementById('statsModal');
+        const closeStats = document.getElementById('closeStats');
+        const statsContent = document.getElementById('statsContent');
+        
         const loginForm = document.getElementById('loginForm');
         const productForm = document.getElementById('productForm');
         const categoryForm = document.getElementById('categoryForm');
         const formTitle = document.getElementById('formTitle');
         const productImage = document.getElementById('productImage');
         const imagePreview = document.getElementById('imagePreview');
+        const priceChangeIndicator = document.getElementById('priceChangeIndicator');
 
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
@@ -285,8 +381,32 @@
             }, 3000);
         }
 
+        function renderSkeletonLoader() {
+            categoriesContainer.innerHTML = `
+                <button class="category-btn skeleton" style="width: 70px; height: 32px; border: none;"></button>
+                <button class="category-btn skeleton" style="width: 90px; height: 32px; border: none;"></button>
+                <button class="category-btn skeleton" style="width: 60px; height: 32px; border: none;"></button>
+            `;
+            let skeletonCards = '';
+            for(let i=0; i<6; i++) {
+                skeletonCards += `
+                    <div class="product-card" style="padding: 10px; display: flex; flex-direction: column; gap: 10px; border: 1px solid var(--section-border);">
+                        <div class="skeleton" style="width: 100%; aspect-ratio: 1/1; border-radius: 8px;"></div>
+                        <div class="skeleton" style="height: 16px; width: 80%; margin: 5px auto 0; border-radius: 4px;"></div>
+                        <div class="skeleton" style="height: 12px; width: 50%; margin: 0 auto; border-radius: 4px;"></div>
+                        <div class="skeleton" style="height: 20px; width: 60%; margin: 10px auto 0; border-radius: 4px;"></div>
+                    </div>
+                `;
+            }
+            productsContainer.innerHTML = skeletonCards;
+        }
+
         function renderCategories() {
-            categoriesContainer.innerHTML = `<button class="category-btn ${currentCategory === 'all' ? 'active' : ''}" data-category="all"><i class="fas fa-th"></i> هەمی</button>`;
+            categoriesContainer.innerHTML = `
+                <button class="category-btn ${currentCategory === 'all' ? 'active' : ''}" data-category="all"><i class="fas fa-th"></i> هەمی</button>
+                <button class="category-btn special-filter ${currentCategory === 'changed_price' ? 'active' : ''}" data-category="changed_price"><i class="fas fa-tags"></i> گۆڕانکاری نرخ</button>
+                <button class="category-btn no-barcode-filter ${currentCategory === 'no_barcode' ? 'active' : ''}" data-category="no_barcode"><i class="fas fa-barcode"></i> بێ بارکۆد</button>
+            `;
             productCategorySelect.innerHTML = `<option value="" disabled selected>-- جۆرێک هەڵبژێرە --</option>`;
 
             categories.forEach(cat => {
@@ -299,7 +419,6 @@
                 } else {
                     btn.textContent = cat.name;
                 }
-                
                 categoriesContainer.appendChild(btn);
 
                 const option = document.createElement('option');
@@ -314,6 +433,7 @@
                     document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                     currentCategory = btn.getAttribute('data-category');
+                    renderLimit = 15; 
                     renderProducts();
                 });
             });
@@ -340,32 +460,89 @@
             productsContainer.innerHTML = '';
             
             const filteredProducts = products.filter(product => {
-                const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
+                let matchesCategory = false;
+                
+                if (currentCategory === 'all') {
+                    matchesCategory = true;
+                } else if (currentCategory === 'changed_price') {
+                    matchesCategory = (product.oldPrice !== undefined && product.oldPrice !== product.price);
+                } else if (currentCategory === 'no_barcode') {
+                    matchesCategory = (!product.code || product.code.trim() === '');
+                } else {
+                    matchesCategory = product.category === currentCategory;
+                }
+
                 const searchLower = currentSearch.toLowerCase();
                 const matchesSearch = product.name.toLowerCase().includes(searchLower) || 
                                       (product.code && product.code.toLowerCase().includes(searchLower));
                 return matchesCategory && matchesSearch;
             });
             
+            filteredProducts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
             if (filteredProducts.length === 0) {
                 productsContainer.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--dark-gray);">هیچ کاڵایەک نەدۆزرایەوە</div>';
                 return;
             }
             
-            filteredProducts.forEach(product => {
+            const productsToRender = filteredProducts.slice(0, renderLimit);
+            
+            productsToRender.forEach(product => {
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card';
                 
-                const codeDisplay = product.code ? `<div class="product-code-display"><i class="fas fa-barcode"></i> ${product.code}</div>` : '';
+                const codeDisplay = product.code && product.code.trim() !== '' 
+                    ? `<div class="product-code-display"><i class="fas fa-barcode"></i> ${product.code}</div>` 
+                    : `<div class="product-code-display" style="background-color: #ffe4e6; color: #e11d48;"><i class="fas fa-ban"></i> بێ بارکۆد</div>`;
+                
+                const formattedPrice = parseFloat(product.price).toLocaleString('en-US');
+
+                let priceDisplayHtml = `<div class="product-price">${formattedPrice} دینار</div>`;
+                if (product.oldPrice && product.oldPrice !== product.price) {
+                    if (product.price < product.oldPrice) {
+                        priceDisplayHtml = `
+                            <div style="font-size: 11px; color: var(--dark-gray); text-decoration: line-through; margin-top: 4px;">${parseFloat(product.oldPrice).toLocaleString('en-US')}</div>
+                            <div class="product-price" style="color: var(--accent-light); margin-top: 0;">${formattedPrice} دینار <i class="fas fa-arrow-down" style="font-size: 12px;"></i></div>
+                        `;
+                    } else if (product.price > product.oldPrice) {
+                        priceDisplayHtml = `
+                            <div style="font-size: 11px; color: var(--dark-gray); text-decoration: line-through; margin-top: 4px;">${parseFloat(product.oldPrice).toLocaleString('en-US')}</div>
+                            <div class="product-price" style="color: var(--danger-color); margin-top: 0;">${formattedPrice} دینار <i class="fas fa-arrow-up" style="font-size: 12px;"></i></div>
+                        `;
+                    }
+                }
+
+                let profitHtml = '';
+                if (isAdmin && product.purchasePrice) {
+                    const profit = parseFloat(product.price) - parseFloat(product.purchasePrice);
+                    const profitClass = profit >= 0 ? 'profit-amount' : 'loss-amount';
+                    profitHtml = `
+                        <div class="profit-section show">
+                            <div class="profit-row">
+                                <span><i class="fas fa-box-open"></i> نرخی کڕین:</span>
+                                <span>${parseFloat(product.purchasePrice).toLocaleString('en-US')} د.</span>
+                            </div>
+                            <div class="profit-row">
+                                <span><i class="fas fa-chart-line"></i> قازانج:</span>
+                                <span class="${profitClass}">${profit.toLocaleString('en-US')} د.</span>
+                            </div>
+                        </div>
+                    `;
+                }
 
                 productCard.innerHTML = `
                     <div class="product-image-container">
                         <img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.src='https://placehold.co/300x300/e2e8f0/2d3748?text=Image+Error'">
                     </div>
                     <div class="product-info">
-                        <div class="product-name">${product.name}</div>
-                        ${codeDisplay}
-                        <div class="product-price">$${parseFloat(product.price).toFixed(2)}</div>
+                        <div>
+                            <div class="product-name">${product.name}</div>
+                            ${codeDisplay}
+                        </div>
+                        <div>
+                            ${priceDisplayHtml}
+                            ${profitHtml}
+                        </div>
                     </div>
                     <div class="product-actions">
                         ${isAdmin ? `
@@ -374,9 +551,28 @@
                         ` : ''}
                     </div>
                 `;
-                
                 productsContainer.appendChild(productCard);
             });
+            
+            if (renderLimit < filteredProducts.length) {
+                const sentinel = document.createElement('div');
+                sentinel.style.gridColumn = '1 / -1';
+                sentinel.style.textAlign = 'center';
+                sentinel.style.padding = '20px 0';
+                sentinel.innerHTML = '<div class="spinner" style="margin: 0 auto;"></div>';
+                productsContainer.appendChild(sentinel);
+                
+                const observer = new IntersectionObserver((entries) => {
+                    if(entries[0].isIntersecting) {
+                        observer.disconnect();
+                        setTimeout(() => {
+                            renderLimit += 15;
+                            renderProducts();
+                        }, 400); 
+                    }
+                });
+                observer.observe(sentinel);
+            }
             
             if (isAdmin) {
                 document.querySelectorAll('.edit-btn').forEach(btn => {
@@ -400,14 +596,18 @@
             if (!product) return;
             
             editingProductId = productId;
+            originalPrice = parseFloat(product.price); 
+            
             document.getElementById('productCode').value = product.code || '';
             document.getElementById('productName').value = product.name;
+            document.getElementById('productPurchasePrice').value = product.purchasePrice || '';
             document.getElementById('productPrice').value = product.price;
             document.getElementById('productCategory').value = product.category;
             
-            // گۆڕانکاری بۆ دانانی لینکەکە لە خانەکە
             document.getElementById('productImage').value = product.image || '';
             imagePreview.innerHTML = `<img src="${product.image}" style="max-width: 100%; max-height: 150px;">`;
+            
+            priceChangeIndicator.innerHTML = `<span style="color: var(--dark-gray);"><i class="fas fa-info-circle"></i> نرخی ئێستا: ${originalPrice.toLocaleString('en-US')} دینار</span>`;
             
             formTitle.textContent = 'دەستکاری کردنی کاڵا';
             productFormModal.style.display = 'block';
@@ -426,40 +626,69 @@
         
         function startScanner() {
             scannerModal.style.display = 'block';
-            if (!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner(
-                    "reader", { fps: 10, qrbox: { width: 250, height: 250 } }, false);
+            
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
             }
-            html5QrcodeScanner.render((decodedText) => {
-                searchInput.value = decodedText;
-                currentSearch = decodedText;
-                renderProducts();
-                stopScanner();
-                showNotification('کۆدەکە دۆزرایەوە', 'success');
-            }, (error) => {});
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { 
+                    fps: 10, 
+                    qrbox: { width: 250, height: 250 } 
+                },
+                (decodedText) => {
+                    searchInput.value = decodedText;
+                    currentSearch = decodedText;
+                    renderLimit = 15;
+                    renderProducts();
+                    stopScanner();
+                    showNotification('کۆدەکە دۆزرایەوە', 'success');
+                },
+                (errorMessage) => {
+                    // Ignore background errors
+                }
+            ).then(() => {
+                isScanning = true;
+            }).catch((err) => {
+                console.error("هەڵە ل ڤەکرنا کامێرایێ:", err);
+                alert("نەشیا کامێرایێ ڤەکەت! تکایە ڕێگە بدە ب کامێرایێ (Allow Camera).");
+                scannerModal.style.display = 'none';
+            });
         }
 
         function stopScanner() {
-            if (html5QrcodeScanner) { html5QrcodeScanner.clear(); }
-            scannerModal.style.display = 'none';
+            if (html5QrCode && isScanning) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    isScanning = false;
+                    scannerModal.style.display = 'none';
+                }).catch((err) => {
+                    isScanning = false;
+                    scannerModal.style.display = 'none';
+                });
+            } else {
+                scannerModal.style.display = 'none';
+            }
         }
 
         function setupEventListeners() {
             adminLoginBtn.addEventListener('click', () => { loginModal.style.display = 'block'; });
             
-            logoutBtn.addEventListener('click', () => {
-                isAdmin = false;
-                logoutBtn.style.display = 'none';
-                adminLoginBtn.style.display = 'block';
-                adminControls.style.display = 'none';
-                renderCategories();
-                renderProducts();
-                showNotification('بە سەرکەوتوویی چوویتەدەرەوە', 'success');
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await signOut(auth);
+                    showNotification('بە سەرکەوتوویی چوویتەدەرەوە', 'success');
+                } catch (error) {
+                    showNotification('هەڵەیەک ڕوویدا لە چوونەدەرەوە', 'error');
+                }
             });
             
             addProductBtn.addEventListener('click', () => {
                 editingProductId = null;
+                originalPrice = 0;
                 productForm.reset();
+                priceChangeIndicator.innerHTML = '';
                 document.getElementById('productImage').value = '';
                 imagePreview.innerHTML = 'پێشبینی وێنە';
                 formTitle.textContent = 'زیادکردنی کاڵای نوێ';
@@ -476,31 +705,30 @@
             document.getElementById('closeCategoryForm').addEventListener('click', () => categoryFormModal.style.display = 'none');
             document.getElementById('closeScanner').addEventListener('click', stopScanner);
             
+            closeStats.addEventListener('click', () => statsModal.style.display = 'none');
+            
             window.addEventListener('click', (e) => {
                 if (e.target === loginModal) loginModal.style.display = 'none';
                 if (e.target === productFormModal) productFormModal.style.display = 'none';
                 if (e.target === categoryFormModal) categoryFormModal.style.display = 'none';
                 if (e.target === scannerModal) stopScanner();
+                if (e.target === statsModal) statsModal.style.display = 'none';
             });
             
             scanBtn.addEventListener('click', startScanner);
             
-            loginForm.addEventListener('submit', (e) => {
+            loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const username = document.getElementById('username').value;
+                const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
-                if (username === ADMIN_USER.username && password === ADMIN_USER.password) {
-                    isAdmin = true;
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
                     loginModal.style.display = 'none';
-                    logoutBtn.style.display = 'block';
-                    adminLoginBtn.style.display = 'none';
-                    adminControls.style.display = 'flex';
-                    renderCategories();
-                    renderProducts();
+                    loginForm.reset();
                     showNotification('بە سەرکەوتوویی چوویتەژوورەوە', 'success');
-                } else {
-                    showNotification('ناوی بەکارهێنەر یان وشەی نهێنی هەڵەە', 'error');
+                } catch (error) {
+                    showNotification('ئیمەیل یان وشەی نهێنی هەڵەیە', 'error');
                 }
             });
 
@@ -519,22 +747,48 @@
                 }
             });
             
+            document.getElementById('productPrice').addEventListener('input', (e) => {
+                if (editingProductId) {
+                    const newPrice = parseFloat(e.target.value);
+                    if (isNaN(newPrice)) {
+                        priceChangeIndicator.innerHTML = `<span style="color: var(--dark-gray);"><i class="fas fa-info-circle"></i> نرخی پێشوو: ${originalPrice.toLocaleString('en-US')} دینار</span>`;
+                        return;
+                    }
+                    
+                    if (newPrice > originalPrice) {
+                        const diff = newPrice - originalPrice;
+                        priceChangeIndicator.innerHTML = `<span style="color: var(--danger-color);"><i class="fas fa-arrow-up"></i> بەرزبووەتەوە بە بڕی ${diff.toLocaleString('en-US')} دینار</span>`;
+                    } else if (newPrice < originalPrice) {
+                        const diff = originalPrice - newPrice;
+                        priceChangeIndicator.innerHTML = `<span style="color: var(--accent-light);"><i class="fas fa-arrow-down"></i> دابەزیوە بە بڕی ${diff.toLocaleString('en-US')} دینار</span>`;
+                    } else {
+                        priceChangeIndicator.innerHTML = `<span style="color: var(--dark-gray);"><i class="fas fa-equals"></i> نرخ وەک خۆیەتی</span>`;
+                    }
+                }
+            });
+
             productForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                // ڕاستەوخۆ لینکەکە وەردەگرێت لە خانەکەوە
                 const imageUrl = document.getElementById('productImage').value.trim();
+                const newPurchasePrice = parseFloat(document.getElementById('productPurchasePrice').value);
+                const newPrice = parseFloat(document.getElementById('productPrice').value);
                 
                 const productData = {
                     code: document.getElementById('productCode').value,
                     name: document.getElementById('productName').value,
-                    price: parseFloat(document.getElementById('productPrice').value),
+                    purchasePrice: newPurchasePrice,
+                    price: newPrice,
                     category: document.getElementById('productCategory').value,
-                    image: imageUrl || 'https://placehold.co/300x300/e2e8f0/2d3748?text=Product'
+                    image: imageUrl || 'https://placehold.co/300x300/e2e8f0/2d3748?text=Product',
+                    timestamp: Date.now()
                 };
                 
                 try {
                     if (editingProductId) {
+                        if (newPrice !== originalPrice) {
+                            productData.oldPrice = originalPrice;
+                        }
                         const productRef = doc(db, "products", editingProductId);
                         await updateDoc(productRef, productData);
                         showNotification('کاڵا سەرکەوتووانە نوێکرایەوە', 'success');
@@ -544,14 +798,15 @@
                     }
                     productFormModal.style.display = 'none';
                     editingProductId = null;
+                    originalPrice = 0;
                     productForm.reset();
+                    priceChangeIndicator.innerHTML = '';
                     imagePreview.innerHTML = 'پێشبینی وێنە';
                 } catch (error) {
                     showNotification('هەڵەیەک ڕوویدا', 'error');
                 }
             });
 
-            // کاتێک لینکێک دادەنێت، ڕاستەوخۆ پێشبینی وێنەکە دروست دەکات
             productImage.addEventListener('input', function() {
                 const url = this.value.trim();
                 if (url) {
@@ -563,11 +818,75 @@
             
             searchInput.addEventListener('input', () => {
                 currentSearch = searchInput.value;
+                renderLimit = 15; 
                 renderProducts();
+            });
+
+            statsBtn.addEventListener('click', () => {
+                let totalPurchase = 0;
+                let totalSelling = 0;
+
+                products.forEach(p => {
+                    if (p.purchasePrice && p.price) {
+                        totalPurchase += parseFloat(p.purchasePrice);
+                        totalSelling += parseFloat(p.price);
+                    }
+                });
+
+                const totalProfit = totalSelling - totalPurchase;
+                let profitPercentage = 0;
+                let profitPer100k = 0;
+
+                if (totalPurchase > 0) {
+                    profitPercentage = (totalProfit / totalPurchase) * 100;
+                    profitPer100k = (profitPercentage / 100) * 100000;
+                }
+
+                statsContent.innerHTML = `
+                    <div class="stat-box">
+                        <div class="stat-title">سەرمایەی وەگەڕخراو (کۆی نرخی کڕین)</div>
+                        <div class="stat-value val-purchase">${totalPurchase.toLocaleString('en-US')} دينار</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-title">کۆی داهات ئەگەر هەمووی بفرۆشرێت</div>
+                        <div class="stat-value val-selling">${totalSelling.toLocaleString('en-US')} دينار</div>
+                    </div>
+                    <div class="stat-box stat-success">
+                        <div class="stat-title">کۆی پوختەی قازانج</div>
+                        <div class="stat-value val-profit">${totalProfit.toLocaleString('en-US')} دينار</div>
+                    </div>
+                    <div class="stat-box stat-highlight">
+                        <div class="stat-title">ڕێژەی قازانج</div>
+                        <div class="stat-value val-percentage">%${profitPercentage.toFixed(2)}</div>
+                        <div style="font-size: 13px; color: var(--dark-gray); margin-top: 8px; line-height: 1.5;">
+                            <i class="fas fa-info-circle"></i> واتە بۆ هەر ١٠٠,٠٠٠ دینارێک سەرمایە، بڕی <b>${Math.round(profitPer100k).toLocaleString('en-US')} دینار</b> قازانج دەکەیت.
+                        </div>
+                    </div>
+                `;
+                statsModal.style.display = 'block';
             });
         }
 
         function init() {
+            renderSkeletonLoader();
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    isAdmin = true;
+                    logoutBtn.style.display = 'block';
+                    adminLoginBtn.style.display = 'none';
+                    adminControls.style.display = 'flex';
+                } else {
+                    isAdmin = false;
+                    logoutBtn.style.display = 'none';
+                    adminLoginBtn.style.display = 'block';
+                    adminControls.style.display = 'none';
+                }
+                
+                if (categories.length > 0) renderCategories();
+                if (products.length > 0) renderProducts();
+            });
+
             onSnapshot(categoriesCollection, (snapshot) => {
                 categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderCategories();
@@ -585,9 +904,3 @@
     </script>
 </body>
 </html>
-```<FollowUp label="ماڵپەڕێک بۆ دروستکردنی لینکی وێنە" query="ئایا دەتوانیت ماڵپەڕێکم پێ بڵێیت کە وێنەکانی مۆبایلەکەم یان کۆمپیوتەرەکەمی تێدا بەرز بکەمەوە و لینکەکەی کۆپی بکەم بۆ ئەم وێبسایتە؟"/>
-
-<ElicitationsGroup message="پێویستت بە هیچ گۆڕانکارییەکی تر هەیە؟">
-  <Elicitation label="گۆڕینی لۆگۆ یان ناو" query="دەتوانم فێربم چۆن ناوی (فرۆشگای MATEN) لەسەرەوەی وێبسایتەکە بگۆڕم؟"/>
-  <Elicitation label="بەرزکردنەوەی وێبسایت بۆ ئینتەرنێت" query="وێبسایتەکە ئامادەیە، چۆن ئێستا لە ڕێگەی Github Pages یان Firebase Hosting بیخەمە سەر ئینتەرنێت؟"/>
-</ElicitationsGroup>
