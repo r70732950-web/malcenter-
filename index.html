@@ -263,7 +263,12 @@
                 <form id="productForm">
                     <div class="form-group">
                         <label for="productCode">کۆدی کاڵا (بارکۆد):</label>
-                        <input type="text" id="productCode" placeholder="ئەگەر بارکۆدی نییە با بەتاڵی بمێنێتەوە...">
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="productCode" placeholder="ئەگەر بارکۆدی نییە با بەتاڵی بمێنێتەوە..." style="flex: 1;">
+                            <button type="button" id="scanBarcodeBtn" class="scan-btn" title="سکان بە کامێرا">
+                                <i class="fas fa-qrcode"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="form-group"><label for="productName">ناوی کاڵا:</label><input type="text" id="productName" required></div>
                     
@@ -338,6 +343,7 @@
         
         let html5QrCode = null;
         let isScanning = false;
+        let scanTarget = 'search'; 
         
         let renderLimit = 15; 
 
@@ -624,7 +630,8 @@
             }
         }
         
-        function startScanner() {
+        function startScanner(target = 'search') {
+            scanTarget = target;
             scannerModal.style.display = 'block';
             
             if (!html5QrCode) {
@@ -638,12 +645,17 @@
                     qrbox: { width: 250, height: 250 } 
                 },
                 (decodedText) => {
-                    searchInput.value = decodedText;
-                    currentSearch = decodedText;
-                    renderLimit = 15;
-                    renderProducts();
+                    if (scanTarget === 'search') {
+                        searchInput.value = decodedText;
+                        currentSearch = decodedText;
+                        renderLimit = 15;
+                        renderProducts();
+                        showNotification('کۆدەکە دۆزرایەوە', 'success');
+                    } else if (scanTarget === 'add') {
+                        document.getElementById('productCode').value = decodedText;
+                        showNotification('بارکۆد سەرکەوتوویانە وەرگیرا', 'success');
+                    }
                     stopScanner();
-                    showNotification('کۆدەکە دۆزرایەوە', 'success');
                 },
                 (errorMessage) => {
                     // Ignore background errors
@@ -715,7 +727,8 @@
                 if (e.target === statsModal) statsModal.style.display = 'none';
             });
             
-            scanBtn.addEventListener('click', startScanner);
+            scanBtn.addEventListener('click', () => startScanner('search'));
+            document.getElementById('scanBarcodeBtn').addEventListener('click', () => startScanner('add'));
             
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
