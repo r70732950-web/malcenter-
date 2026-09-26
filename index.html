@@ -44,7 +44,6 @@
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'NRT', sans-serif; }
         
-        /* ڕێگریکردن لە delay ی دەستلێدان لە مۆبایل */
         button, input, select { touch-action: manipulation; }
         
         body { background-color: var(--light-gray); color: var(--text-color); direction: rtl; transition: background-color 0.3s; }
@@ -74,7 +73,6 @@
         .category-btn.special-filter { background-color: #fffaeb; color: var(--warning-color); border-color: #f6e05e; }
         .category-btn.special-filter.active { background-color: var(--warning-color); color: white; border-color: var(--warning-color); }
         
-        /* دیزاینی تایبەت بۆ دوگمەی بێ بارکۆد */
         .category-btn.no-barcode-filter { background-color: #ffe4e6; color: #e11d48; border-color: #fda4af; }
         .category-btn.no-barcode-filter.active { background-color: #e11d48; color: white; border-color: #e11d48; }
         
@@ -127,6 +125,11 @@
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid var(--section-border); border-radius: 6px; }
+        
+        /* نوێکردنەوە بۆ دیزاینی ئینپوتی فایل */
+        .file-input-wrapper { display: flex; flex-direction: column; gap: 8px; }
+        .file-input-wrapper input[type="file"] { padding: 8px; background: var(--light-gray); border: 1px dashed var(--dark-gray); cursor: pointer; }
+        
         button[type="submit"] { background-color: var(--accent-color); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; font-weight: bold; }
         .notification { position: fixed; top: 15px; right: 15px; padding: 12px 16px; border-radius: 6px; color: white; z-index: 300; opacity: 0; transform: translateX(100%); transition: all 0.3s; }
         .notification.show { opacity: 1; transform: translateX(0); }
@@ -290,11 +293,19 @@
                         </select>
                     </div>
                     
+                    <!-- بەشی نوێکراوەی ئەپلۆدی وێنە -->
                     <div class="form-group">
-                        <label for="productImage">لینکی وێنەی کاڵا:</label>
-                        <input type="url" id="productImage" required placeholder="لینکی وێنەکە لێرە دابنێ (http://...)">
-                        <div id="imagePreview" style="margin-top: 8px; border:1px dashed #ccc; padding:10px; text-align:center;">پێشبینی وێنە</div>
+                        <label for="productImageFile">وێنەی کاڵا هەڵبژێرە:</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="productImageFile" accept="image/*" capture="environment">
+                            <input type="hidden" id="productImage" required>
+                            <div id="uploadStatus" style="color: var(--accent-color); font-size: 13px; font-weight: bold; display: none;">
+                                <i class="fas fa-spinner fa-spin"></i> خەریکی ئەپلۆدکردنە... ⏳
+                            </div>
+                            <div id="imagePreview" style="margin-top: 8px; border:1px dashed #ccc; padding:10px; text-align:center; border-radius: 6px; min-height: 100px; display: flex; align-items: center; justify-content: center;">پێشبینی وێنە</div>
+                        </div>
                     </div>
+                    
                     <button type="submit">پاشەکەوتکردن</button>
                 </form>
             </div>
@@ -371,9 +382,13 @@
         const productForm = document.getElementById('productForm');
         const categoryForm = document.getElementById('categoryForm');
         const formTitle = document.getElementById('formTitle');
-        const productImage = document.getElementById('productImage');
-        const imagePreview = document.getElementById('imagePreview');
         const priceChangeIndicator = document.getElementById('priceChangeIndicator');
+        
+        // Elementە نوێیەکانی وێنە
+        const productImageFile = document.getElementById('productImageFile');
+        const productImageInput = document.getElementById('productImage');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const imagePreview = document.getElementById('imagePreview');
 
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
@@ -610,8 +625,11 @@
             document.getElementById('productPrice').value = product.price;
             document.getElementById('productCategory').value = product.category;
             
-            document.getElementById('productImage').value = product.image || '';
-            imagePreview.innerHTML = `<img src="${product.image}" style="max-width: 100%; max-height: 150px;">`;
+            // وێنەکان بۆ کاتی دەستکاریکردن ئامادە دەکەین
+            productImageInput.value = product.image || '';
+            productImageFile.value = ''; // بەتاڵکردنی ئینپوتی فایلەکە ئەگەر پێشتر شتی تێدابوو
+            uploadStatus.style.display = 'none';
+            imagePreview.innerHTML = `<img src="${product.image}" style="max-width: 100%; max-height: 150px; border-radius: 6px;">`;
             
             priceChangeIndicator.innerHTML = `<span style="color: var(--dark-gray);"><i class="fas fa-info-circle"></i> نرخی ئێستا: ${originalPrice.toLocaleString('en-US')} دینار</span>`;
             
@@ -701,8 +719,13 @@
                 originalPrice = 0;
                 productForm.reset();
                 priceChangeIndicator.innerHTML = '';
-                document.getElementById('productImage').value = '';
+                
+                // پاککردنەوەی بەشی وێنە بۆ کاڵای نوێ
+                productImageFile.value = '';
+                productImageInput.value = '';
+                uploadStatus.style.display = 'none';
                 imagePreview.innerHTML = 'پێشبینی وێنە';
+                
                 formTitle.textContent = 'زیادکردنی کاڵای نوێ';
                 productFormModal.style.display = 'block';
             });
@@ -780,10 +803,52 @@
                 }
             });
 
+            // ئامادەکردنی فەنکشنی ئەپلۆدی وێنە بۆ سێرڤەرەکەی خۆت
+            productImageFile.addEventListener('change', async function() {
+                const file = this.files[0];
+                if (!file) return;
+
+                uploadStatus.style.display = 'block';
+                imagePreview.innerHTML = '<div class="spinner" style="margin: 0 auto;"></div>';
+
+                const formData = new FormData();
+                formData.append('image', file);
+
+                try {
+                    // ناردنی بۆ APIـی سێرڤەرەکەت (ئەوەی لە هەنگاوی پێشوو دروستمان کرد)
+                    const response = await fetch('https://server.maten-tv.win/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // دروستکردنی لینکی تەواو و دانانی لەناو ئینپوتە شاردراوەکە
+                        const fullImageUrl = 'https://server.maten-tv.win' + data.url;
+                        productImageInput.value = fullImageUrl;
+                        
+                        imagePreview.innerHTML = `<img src="${fullImageUrl}" style="max-width: 100%; max-height: 150px; border-radius: 6px;">`;
+                        uploadStatus.style.display = 'none';
+                        showNotification('وێنەکە سەرکەوتوویانە ئەپلۆد کرا', 'success');
+                    } else {
+                        throw new Error('Upload failed');
+                    }
+                } catch (error) {
+                    console.error("Error uploading image:", error);
+                    uploadStatus.style.display = 'none';
+                    imagePreview.innerHTML = '<span style="color: var(--danger-color);"><i class="fas fa-exclamation-circle"></i> هەڵەیەک ڕوویدا لە ئەپلۆدکردندا</span>';
+                    showNotification('نەتوانرا وێنەکە ئەپلۆد بکرێت', 'error');
+                    productImageInput.value = ''; // بەتاڵکردنەوە ئەگەر هەڵە هەبوو
+                }
+            });
+
             productForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const imageUrl = document.getElementById('productImage').value.trim();
+                // وەرگرتنی لینکەکە لە ئینپوتە شاردراوەکە کە دوای ئەپلۆد پڕ بووەتەوە
+                const imageUrl = productImageInput.value.trim();
+                
                 const newPurchasePrice = parseFloat(document.getElementById('productPurchasePrice').value);
                 const newPrice = parseFloat(document.getElementById('productPrice').value);
                 
@@ -813,19 +878,12 @@
                     editingProductId = null;
                     originalPrice = 0;
                     productForm.reset();
+                    productImageFile.value = '';
+                    productImageInput.value = '';
                     priceChangeIndicator.innerHTML = '';
                     imagePreview.innerHTML = 'پێشبینی وێنە';
                 } catch (error) {
-                    showNotification('هەڵەیەک ڕوویدا', 'error');
-                }
-            });
-
-            productImage.addEventListener('input', function() {
-                const url = this.value.trim();
-                if (url) {
-                    imagePreview.innerHTML = `<img src="${url}" style="max-width: 100%; max-height: 150px;" onerror="this.src='https://placehold.co/300x300/e2e8f0/2d3748?text=Invalid+Link'">`;
-                } else {
-                    imagePreview.innerHTML = 'پێشبینی وێنە';
+                    showNotification('هەڵەیەک ڕوویدا لە پاشەکەوتکردن', 'error');
                 }
             });
             
