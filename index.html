@@ -84,12 +84,7 @@
         .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--dark-gray); }
         .scan-btn { background-color: var(--primary-color); color: white; border: none; border-radius: 6px; padding: 0 15px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
         
-        /* --- گۆڕینی قەبارەی کاڵایان --- */
-        .products-container { display: grid; gap: 12px; }
-        .products-container.grid-large { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
-        .products-container.grid-medium { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
-        .products-container.grid-small { grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); }
-
+        .products-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
         .product-card { background-color: white; border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--section-border); transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
         .product-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1); }
         
@@ -112,20 +107,13 @@
         .product-code-display { font-size: 11px; color: var(--dark-gray); background: var(--light-gray); padding: 2px 5px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
         .product-price { color: var(--accent-light); font-weight: 700; font-size: 15px; }
         
-        /* بچووککرنەوەی فۆنتەکان کاتێک قەبارە بچووک دەکرێتەوە */
-        .grid-medium .product-name { font-size: 13px; }
-        .grid-medium .product-price { font-size: 14px; }
-        .grid-small .product-name { font-size: 11px; }
-        .grid-small .product-price { font-size: 12px; }
-        .grid-small .product-code-display { font-size: 9px; padding: 1px 3px; }
-
         .profit-section { margin-top: 10px; background-color: #f0fff4; border: 1px dashed var(--accent-light); border-radius: 6px; padding: 8px; text-align: right; font-size: 12px; display: none; }
         .profit-section.show { display: block; }
         .profit-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .profit-amount { font-weight: bold; color: var(--accent-color); }
         .loss-amount { font-weight: bold; color: var(--danger-color); }
         
-        /* --- کاڵای نەماو (Out of Stock) --- */
+        /* --- ستایلەکانی کاڵای نەماو --- */
         .out-of-stock-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -142,7 +130,7 @@
             font-size: 12px;
             transform: rotate(-15deg);
         }
-
+        
         .product-actions { position: absolute; top: 5px; left: 5px; display: none; gap: 5px; flex-direction: column; z-index: 10; }
         .product-card:hover .product-actions { display: flex; }
         .edit-btn, .delete-btn, .stock-btn, .stock-restore-btn { width: 28px; height: 28px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; font-size: 13px; color: white; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -201,8 +189,7 @@
                 <span class="logo-bottom">Mal Centre</span>
             </div>
             <div class="user-actions">
-                <button id="outOfStockBtn" title="لیستی کاڵا نەماوەکان"><i class="fas fa-boxes-slash" style="color: var(--danger-color);"></i></button>
-                <button id="zoomGridBtn" title="گۆڕینی قەبارەی بینین"><i class="fas fa-th-large"></i></button>
+                <button id="zoomGridBtn" title="گۆڕینی قەبارەی شاشە"><i class="fas fa-search-minus"></i></button>
                 <button id="adminLoginBtn" title="چوونەژوورەوەی بەڕێوەبەر"><i class="fas fa-user-shield"></i></button>
                 <button id="logoutBtn" style="display: none;" title="چوونەدەرەوە"><i class="fas fa-sign-out-alt"></i></button>
             </div>
@@ -261,7 +248,7 @@
             </div>
             <div class="section">
                 <h3 class="section-title"><i class="fas fa-box-open"></i> کاڵاکان</h3>
-                <div class="products-container grid-large" id="productsContainer">
+                <div class="products-container" id="productsContainer">
                 </div>
             </div>
         </main>
@@ -389,12 +376,11 @@
         let scanTarget = 'search'; 
         
         let renderLimit = 15; 
-        let gridZoomLevel = 1; 
+        let currentZoom = 1; // 100% Zoom
 
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
         const zoomGridBtn = document.getElementById('zoomGridBtn');
-        const outOfStockBtn = document.getElementById('outOfStockBtn');
         const loginModal = document.getElementById('loginModal');
         const adminControls = document.getElementById('adminControls');
         const addProductBtn = document.getElementById('addProductBtn');
@@ -461,6 +447,7 @@
                 <button class="category-btn ${currentCategory === 'all' ? 'active' : ''}" data-category="all"><i class="fas fa-th"></i> هەمی</button>
                 <button class="category-btn special-filter ${currentCategory === 'changed_price' ? 'active' : ''}" data-category="changed_price"><i class="fas fa-tags"></i> گۆڕانکاری نرخ</button>
                 <button class="category-btn no-barcode-filter ${currentCategory === 'no_barcode' ? 'active' : ''}" data-category="no_barcode"><i class="fas fa-barcode"></i> بێ بارکۆد</button>
+                <button class="category-btn ${currentCategory === 'out_of_stock' ? 'active' : ''}" style="${currentCategory === 'out_of_stock' ? 'background-color: #dc2626; color: white; border-color: #dc2626;' : 'background-color: #fee2e2; color: #dc2626; border-color: #f87171;'}" data-category="out_of_stock"><i class="fas fa-boxes-slash"></i> نەماوە</button>
             `;
             productCategorySelect.innerHTML = `<option value="" disabled selected>-- جۆرێک هەڵبژێرە --</option>`;
 
@@ -521,7 +508,7 @@
                 if (currentCategory === 'out_of_stock') {
                     matchesCategory = isOutOfStock;
                 } else {
-                    if (isOutOfStock) return false; 
+                    if (isOutOfStock) return false;
                     
                     if (currentCategory === 'all') {
                         matchesCategory = true;
@@ -591,7 +578,7 @@
                         </div>
                     `;
                 }
-
+                
                 const outOfStockOverlay = product.isOutOfStock ? `
                     <div class="out-of-stock-overlay">
                         <div class="out-of-stock-text">نەماوە</div>
@@ -771,27 +758,22 @@
 
         function setupEventListeners() {
             zoomGridBtn.addEventListener('click', () => {
-                gridZoomLevel = gridZoomLevel >= 3 ? 1 : gridZoomLevel + 1;
-                const container = document.getElementById('productsContainer');
-                container.classList.remove('grid-large', 'grid-medium', 'grid-small');
-                
-                if (gridZoomLevel === 1) {
-                    container.classList.add('grid-large');
-                    zoomGridBtn.innerHTML = '<i class="fas fa-th-large"></i>';
-                } else if (gridZoomLevel === 2) {
-                    container.classList.add('grid-medium');
-                    zoomGridBtn.innerHTML = '<i class="fas fa-th"></i>';
+                if (currentZoom === 1) {
+                    currentZoom = 0.7;
+                    zoomGridBtn.innerHTML = '<i class="fas fa-search-plus"></i>';
+                } else if (currentZoom === 0.7) {
+                    currentZoom = 0.58;
+                    zoomGridBtn.innerHTML = '<i class="fas fa-search"></i>';
+                } else if (currentZoom === 0.58) {
+                    currentZoom = 0.50;
+                    zoomGridBtn.innerHTML = '<i class="fas fa-search-minus"></i>';
                 } else {
-                    container.classList.add('grid-small');
-                    zoomGridBtn.innerHTML = '<i class="fas fa-grip-horizontal"></i>';
+                    currentZoom = 1;
+                    zoomGridBtn.innerHTML = '<i class="fas fa-search-minus"></i>';
                 }
-            });
-
-            outOfStockBtn.addEventListener('click', () => {
-                document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-                currentCategory = 'out_of_stock';
-                renderLimit = 15;
-                renderProducts();
+                
+                document.body.style.zoom = currentZoom;
+                showNotification(`قەبارەی شاشە: ${Math.round(currentZoom * 100)}%`, 'success');
             });
 
             adminLoginBtn.addEventListener('click', () => { loginModal.style.display = 'block'; });
@@ -957,7 +939,6 @@
                         await updateDoc(productRef, productData);
                         showNotification('کاڵا سەرکەوتووانە نوێکرایەوە', 'success');
                     } else {
-                        // For new products, set isOutOfStock to false by default
                         productData.isOutOfStock = false;
                         await addDoc(productsCollection, productData);
                         showNotification('کاڵا سەرکەوتووانە زیادکرا', 'success');
